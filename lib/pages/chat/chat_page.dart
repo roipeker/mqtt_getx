@@ -50,6 +50,20 @@ class ChatMessageItem extends StatelessWidget {
               model.meta.userInitials,
             ),
           ),
+          SizedBox(width: 12),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text("sent by: ${model.meta.username}",
+                  style: Get.textTheme.caption),
+              SizedBox(height: 4),
+              Text(
+                "at ${model.meta.dateUI}",
+                style:
+                    Get.textTheme.caption.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ],
+          )
         ],
       ),
     );

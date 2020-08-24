@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
@@ -11,7 +12,10 @@ class ChatController extends GetxController {
 
   final ScrollController chatScrollController = ScrollController();
 
-  //String get message => _message.value;
+  final _chatHistory = <ChatMessage>[].obs;
+
+  List<ChatMessage> get chatHistory => _chatHistory.value;
+
   void onChangeInput(String message) {
     _message.value = message;
   }
@@ -20,7 +24,6 @@ class ChatController extends GetxController {
     if (_message.value.trim().isEmpty) {
       return null;
     } else {
-      print("Send chat message");
       return _onSendPress;
     }
   }
@@ -33,7 +36,16 @@ class ChatController extends GetxController {
     }
   }
 
-  void _onSendPress() {}
+  void _onSendPress() {
+    final chatJson = ChatMessageMetadata(
+      username: 'guest',
+      date: DateTime.now().toIso8601String(),
+      msg: _message.value,
+    ).toJson();
+    var output = jsonEncode(chatJson);
+    print("output message: $output");
+    _client.sendMessage(output);
+  }
 
   final _isConnected = false.obs;
 
@@ -42,7 +54,6 @@ class ChatController extends GetxController {
   @override
   void onInit() {
     _client.isClientConnected.listen((data) {
-      print("Is connected? $data");
       _isConnected.value = data;
       if (data) {
         _chatHistory.clear();
@@ -54,17 +65,15 @@ class ChatController extends GetxController {
     });
   }
 
-  final _chatHistory = <ChatMessage>[].obs;
-
-  List<ChatMessage> get chatHistory => _chatHistory.value;
-
   @override
   void onReady() {
     _client.connect();
   }
 
   @override
-  void onClose() {}
+  void onClose() {
+    chatScrollController.dispose();
+  }
 
   void _onMessageArrived(event) {
     final msg = ChatMessage.fromPayload(event[0]);

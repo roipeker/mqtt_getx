@@ -53,11 +53,13 @@ class MqttClient {
     return topic;
   }
 
+  String _getFulltopic(String subtopic) {
+    return baseTopic + subtopic;
+  }
+
   void subs({String topic}) {
     topic = _cleanTopic(topic);
-    _lastSubscriptionTopic = topic;
-    final t = baseTopic + topic;
-    client.subscribe(t, MqttQos.atMostOnce);
+    client.subscribe(_getFulltopic(topic), MqttQos.atMostOnce);
   }
 
 //  String get lastSubscription {
@@ -65,14 +67,13 @@ class MqttClient {
 //    return client.subscriptionsManager.subscriptions.entries.last.value.topic.rawTopic;
 //  }
 
-  void sendMessage({String message}) {
+  void sendMessage(String message) {
     if (!isConnected) return;
     if (_lastSubscriptionTopic == null) return;
-
+    final topic = _getFulltopic(_lastSubscriptionTopic);
     final builder = MqttClientPayloadBuilder();
     builder.addString(message);
-    client.publishMessage(
-        _lastSubscriptionTopic, MqttQos.exactlyOnce, builder.payload);
+    client.publishMessage(topic, MqttQos.exactlyOnce, builder.payload);
   }
 
   void _setup() {
@@ -145,7 +146,10 @@ class ChatMessageMetadata {
   final String msg;
 
   String get dateUI {
-    return date ?? DateTime.now().toString();
+    String _date = date ?? DateTime.now().toString();
+    if (_date == null) return 'sometime';
+    _date = _date.split('.')?.first?.split(' ')?.last;
+    return _date ?? 'sometime';
   }
 
   String get userInitials {
